@@ -5,22 +5,38 @@ import {nativeRequest} from './native-client.js';
 import {history,updateHistory,clearHistory,isActive} from '../storage/history-manager.js';
 import {settings,saveSettings} from '../storage/storage-manager.js';
 import {downloadDirect,syncDirectDownloads} from '../downloader/direct-download.js';
+import {isExtensionUI} from './side-panel.js';
+import {candidateSource} from '../utils/video-context.js';
 
 let startChain = Promise.resolve();
-async function inspect(input) {
+let inspectionTask = null;
+function inspect(input) {
   const link = parseLink(input);
   if (link.provider === 'stream') throw new Error(streamNotice(link.extension));
-  if ((await chrome.storage.session.get('inspection')).inspection?.startedAt > Date.now()-120000) throw new Error('A link is already being inspected. Wait a moment.');
+  if (inspectionTask) {
+    if (inspectionTask.url === link.url) return inspectionTask.promise;
+    return inspectionTask.promise.catch(()=>{}).then(()=>inspect(input));
+  }
+  const promise = inspectMedia(link).finally(()=>{inspectionTask = null;});
+  inspectionTask = {url:link.url,promise};
+  return promise;
+}
+async function inspectMedia(link) {
+  const {candidate} = await chrome.storage.session.get('candidate');
+  if (candidate?.expires > Date.now() && candidateSource(candidate) === link.url) return {...candidate.video,token:candidate.token};
   await chrome.storage.session.set({inspection:{url:link.url,startedAt:Date.now()}});
-  await chrome.storage.session.remove('candidate');
+  await chrome.storage.session.remove(['candidate','inspectionError']);
   try {
     let video;
     if (link.provider==='youtube') video = await nativeRequest('inspect',{url:link.url});
     else video = directMetadata(link) || await nativeRequest('probe',{url:link.url});
     const token = crypto.randomUUID();
     // Session storage is not exposed to page content scripts; signed URLs expire with the browser session.
-    await chrome.storage.session.set({candidate:{token,video,expires:Date.now()+15*60*1000}});
+    await chrome.storage.session.set({candidate:{token,sourceUrl:link.url,video,expires:Date.now()+15*60*1000}});
     return {...video,token};
+  } catch(error) {
+    await chrome.storage.session.set({inspectionError:{url:link.url,message:error.message,at:Date.now()}});
+    throw error;
   } finally {await chrome.storage.session.remove('inspection');}
 }
 async function download(message) {
@@ -40,13 +56,12 @@ async function download(message) {
 }
 export async function handleMessage(message, sender) {
   // Native commands must originate from our own UI, never from web pages or content scripts.
-  const base = chrome.runtime.getURL('popup/');
-  if (sender.id!==chrome.runtime.id || !sender.url?.startsWith(base) || sender.tab?.url && !sender.tab.url.startsWith(base)) throw new Error('This action is only available in UniFetch.');
+  if (!isExtensionUI(sender)) throw new Error('This action is only available in UniFetch.');
   if (!message || typeof message.type!=='string') throw new Error('Invalid request.');
   switch(message.type) {
     case 'GET_STATE': {
       await syncDirectDownloads();
-      const session = await chrome.storage.session.get(['candidate','inspection']);
+      const session = await chrome.storage.session.get(['candidate','inspection','inspectionError']);
       return {history:await history(),settings:await settings(),...session};
     }
     case 'CONNECT': {

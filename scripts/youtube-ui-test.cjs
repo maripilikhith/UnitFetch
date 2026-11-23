@@ -17,7 +17,8 @@ const id=[...crypto.createHash('sha256').update(Buffer.from(manifest.key,'base64
     await page.screenshot({path:'test-results/youtube-inspection.png',fullPage:true});
     assert.equal(await page.locator('#download-video').count(),1,'YouTube inspection should offer formats');
     assert.match(await page.locator('#video-result').innerText(),/Big Buck Bunny/);
-    await page.locator('#format-select').selectOption('144-webm');
+    await page.locator('.choice').filter({has:page.locator('input[name="file-type"][value="webm"]')}).click();
+    await page.locator('.choice').filter({has:page.locator('input[name="video-quality"][value="144-webm"]')}).click();
     await page.screenshot({path:'test-results/youtube-preview.png',fullPage:true});
     await page.setViewportSize({width:1000,height:920});await page.screenshot({path:'test-results/expanded-preview.png',fullPage:true});
     await page.setViewportSize({width:420,height:900});

@@ -14,6 +14,7 @@ The browser check uses Playwright and a separate Chrome for Testing profile. It 
 ```powershell
 npm run fixture
 npm run test:browser
+npm run test:ui
 ```
 
 The test expects `test-results/fixture.mp4`, a generated three-second test-pattern/sine-wave video. Generate it using the portable FFmpeg:
@@ -23,6 +24,8 @@ helper/bin/ffmpeg.exe -hide_banner -loglevel error -f lavfi -i testsrc2=size=320
 ```
 
 The browser test starts a temporary loopback server for this generated fixture only. The application does not start a server.
+
+The v2 UI suite (`test:ui`) serves a clearly labeled local HTML fixture at a routed YouTube URL and seeds test-only previews into an isolated extension session. It verifies automatic URL capture/inspection, actual Chrome native-panel opening, SPA navigation, manual-link preservation, theme synchronization, fullscreen hiding, and a 320 px layout. It does **not** prove live extraction or downloading from YouTube. It needs the registered local helper for the connection check. Fixture screenshots remain under ignored `test-results/`; public README screenshots show the actual empty app.
 
 ## Covered checks
 
@@ -36,6 +39,9 @@ The browser test starts a temporary loopback server for this generated fixture o
 - Real Chrome/native-helper handshake.
 - Real direct MP4 save, missing-file failure, duplicate-active rejection, cancellation, and history clearing.
 - Settings/history after popup reload and rejected untrusted message senders.
+- V1 preference migration, theme persistence, and file-type/quality selection.
+- Exact UI-origin validation and rejection of panel requests from untrusted pages or subframes.
+- Automatic current-video capture, native panel opening from the page and popup, video navigation, and hiding the launcher on non-video/fullscreen pages.
 - An opt-in live YouTube helper test is provided in `scripts/live-test.py`. It downloads the lowest-resolution WebM choice of the official Big Buck Bunny film into `test-results/youtube`, combines video and audio, and verifies both tracks with FFmpeg. It does not prove compatibility with every YouTube video.
 
 During this build, the live helper test completed successfully and produced a 15.5 MB WebM with both tracks. A later full UI attempt was rejected by YouTube's sign-in/bot check, so a live YouTube download from the popup was **not** verified to completion. The UI reported the failure; no cookies were imported or checks bypassed. Live results depend on YouTube's current response and network conditions.
@@ -48,7 +54,8 @@ During this build, the live helper test completed successfully and produced a 15
 4. Close Chrome during a native download, reopen, and check that the job is marked interrupted rather than saved.
 5. Try a playlist, live stream, restricted video, invalid URL, and unsupported webpage. Confirm useful failure messages.
 6. Disable/unregister the helper and check that the popup still loads and direct file downloads remain available; re-register afterward.
-7. Inspect keyboard focus, 420 px popup layout, expanded-tab layout, and reduced-motion behavior.
+7. Inspect keyboard focus, 400 px popup layout, 320 px side-panel layout, expanded-tab layout, both themes, and reduced-motion behavior.
+8. Open the extension on an authorized YouTube video, confirm the URL and available formats appear without pasting, then use the page button to open the panel. Navigate to another video and confirm it follows. Paste a different link and confirm navigation no longer overwrites it until **Use current tab** is selected.
 
 ## Sample attribution
 

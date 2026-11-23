@@ -1,5 +1,17 @@
 # Changelog
 
+## 2.0.0 — 2026-11-23
+
+- Automatically capture and inspect the active YouTube video when the extension opens.
+- Add a small bottom-right YouTube launcher and Chrome native side panel, with navigation following and fullscreen hiding.
+- Replace the original interface with a compact white/light-blue design and persistent navy dark mode.
+- Split file type and quality into separate controls, preserving resolution when switching MP4/WebM.
+- Share settings, inspection results, download progress, and history across the popup and side panel.
+- Limit page integration to explicit YouTube hosts; keep native helper commands restricted to the extension UI.
+- Preserve v1 preferences/history and add browser coverage for capture, native panel opening, navigation, themes, and narrow layouts.
+
+Upgrade: reload the extension and refresh open YouTube tabs. Run setup again if the project folder moved. The YouTube service limitations described below still apply.
+
 ## 1.0.0 — 2026-11-23
 
 First public source release of UniFetch.

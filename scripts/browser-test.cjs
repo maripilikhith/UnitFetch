@@ -29,7 +29,14 @@ const id=[...crypto.createHash('sha256').update(Buffer.from(manifest.key,'base64
     try {await page.locator('#connection.ready').waitFor({timeout:90000});}
     catch(error){console.log('Connection details:',await page.locator('#helper-detail').textContent());await page.screenshot({path:'test-results/connection-error.png',fullPage:true});throw error;}
     console.log('PASS: extension loaded and native helper connected');
-    await page.screenshot({path:'test-results/popup.png',fullPage:true});
+    await page.locator('.app').screenshot({path:'test-results/popup.png',animations:'disabled'});
+    assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
+    await page.locator('#theme-toggle').click();
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+    await page.locator('.app').screenshot({path:'test-results/popup-dark.png',animations:'disabled'});
+    await page.reload();await page.locator('#connection.ready').waitFor({timeout:45000});
+    assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+    await page.locator('#theme-toggle').click();await page.waitForFunction(()=>document.documentElement.dataset.theme==='light');
     await page.locator('#settings-button').click();await page.locator('#save-as-setting').uncheck();await page.locator('#quality-setting').selectOption('720');
     await page.locator('[data-view="fetch"]').click();
     await page.locator('#video-url').fill(`http://127.0.0.1:${server.address().port}/fixture.mp4`);await page.locator('#inspect').click();
@@ -53,6 +60,7 @@ const id=[...crypto.createHash('sha256').update(Buffer.from(manifest.key,'base64
     assert.deepEqual(errors,[]);console.log('PASS: invalid links, unsupported streams, and untrusted message senders rejected; no page errors');
     await page.locator('[data-view="history"]').click();await page.locator('#clear-history').click();await page.waitForFunction(()=>document.querySelector('#history-count').textContent==='0');
     console.log('PASS: clear history');
+    console.log('PASS: light/dark theme switching and persistence');
   } catch(error) {console.error('Browser test error:',error);throw error;}
   finally {await Promise.race([context.close(),new Promise(resolve=>setTimeout(resolve,5000))]);server.close();}
 })().catch(e=>{console.error(e);process.exitCode=1;});

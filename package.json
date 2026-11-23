@@ -1,16 +1,21 @@
 {
   "name": "unifetch-workspace",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "scripts": {
     "test": "node --test UniFetch/tests/*.test.js",
     "test:helper": "python -m unittest discover -s helper/tests -v",
     "test:browser": "node scripts/browser-test.cjs",
+    "test:ui": "node scripts/v2-ui-test.cjs",
     "test:youtube": "node scripts/youtube-ui-test.cjs",
     "fixture": "python scripts/generate-fixture.py",
     "check": "node scripts/validate.mjs"
   },
-  "engines": {"node": ">=22"},
-  "devDependencies": {"playwright": "1.62.1"}
+  "engines": {
+    "node": ">=22"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1"
+  }
 }

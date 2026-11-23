@@ -1,8 +1,8 @@
-# UniFetch 1.0.0
+# UniFetch 2.0.0
 
-A local Chrome extension for pasting a YouTube link, inspecting available formats, and saving a complete video with sound. Direct MP4, WebM, M4V, and MOV links are also supported. No account, cloud downloader, analytics, or external processing service is used.
+A local Chrome extension that picks up the YouTube video you are watching, inspects available formats, and saves a complete video with sound. Pasted YouTube links and direct MP4, WebM, M4V, and MOV links are also supported. No account, cloud downloader, analytics, or external processing service is used.
 
-UniFetch is **YouTube-first, link-based, with a Windows local helper**. Automatic page-wide scanning, playlists, and universal website support are outside this version.
+UniFetch is **YouTube-first, with a Windows local helper**. The page launcher reads the current video URL; it does not scan network traffic or enumerate embedded media. Playlists and universal website support are outside this version.
 
 ## Install on Windows
 
@@ -18,12 +18,22 @@ Keep the extension and sibling `helper` folder together. Moving the repository r
 
 The GitHub source/release archive intentionally excludes downloaded executables, Python vendor packages, machine-specific registration files, and personal history. The setup script prepares those on your PC.
 
+### Upgrade from v1
+
+Update the files in the existing project folder, reload UniFetch at `chrome://extensions`, and refresh already-open YouTube pages so the page launcher is installed. If Chrome asks to re-enable the extension for its new YouTube/side-panel permissions, enable it. Existing settings and history stay in place. Light is the default theme; use the header's moon icon to switch to dark. If you move the project to a new folder, run setup again and load that folder's extension.
+
 ## Use
 
-Paste a complete link and choose **Find video**. Select a format, then choose **Download video**. **Use current tab** fills the link from the active tab when the toolbar popup is open. The expand icon opens a larger tab using the same UI.
+Open a YouTube video, then click UniFetch in Chrome's toolbar. The current video link is filled and inspected automatically. Choose the file type and quality, then **Download video**. You can also paste a complete link and choose **Find**.
+
+The small blue button at the bottom-right of a YouTube video page opens the native Chrome side panel. The popup's panel icon opens it too. The panel follows video changes and tab switches while automatic detection is active. Pasting your own link pauses that following behavior; **Use current tab** resumes it. On a non-video page, the launcher is hidden and a following panel clears its old video. Fullscreen playback hides the launcher. Chrome uses the right side by default; its side-panel position setting takes precedence.
+
+Use the moon/sun icon or **Settings → Appearance** for light/dark mode. The choice is saved and synchronized between open UniFetch surfaces. **Settings → Open in a separate tab** opens the larger view.
 
 - YouTube watch, short, Shorts, embed, and finished-live links are normalized to one video.
 - Format choices are based on real extraction results. Every offered YouTube format includes audio, either directly or by merging a separate audio stream.
+- Switching file type preserves the selected resolution when it exists in the other container. Missing resolutions are not displayed. A size shown with `~` is an estimate; otherwise it is shown as unknown.
+- Opening the popup and panel for the same link reuses a recent preview or joins the same pending inspection. Opening either interface never starts a download by itself.
 - The preferred quality setting selects an available resolution at or below the chosen cap when possible. It does not invent missing resolutions.
 - YouTube downloads go to the Windows **Downloads / UniFetch** folder. They are handled by the native helper, so they do not appear in Chrome's own Downloads page.
 - Direct files use Chrome's download manager. Their save dialog is controlled by Settings.
@@ -36,17 +46,19 @@ Only download videos you are authorized to save. UniFetch does not read browser 
 ## Architecture
 
 ```text
-popup (HTML/CSS/ES modules)
+popup / native side panel (HTML/CSS/ES modules)
   -> validated runtime messages
   -> Manifest V3 service worker
      -> Chrome Downloads API for direct files
      -> Chrome native messaging for YouTube
         -> Python helper -> yt-dlp + Deno -> FFmpeg
+
+YouTube content script -> validated open-panel message -> Chrome sidePanel API
 ```
 
-`popup/` contains the interface. `background/` handles messages and the native port. `detector/`, `downloader/`, `storage/`, and `utils/` contain small focused modules. The sibling `helper/` implements the native protocol, URL validation, format pairing, process control, verification, and persistent helper job state. No HTTP server is started by the application.
+`popup/` contains the shared interface. `content/` adds the isolated page button. `background/` handles messages, panel opening, and the native port. `detector/`, `downloader/`, `storage/`, and `utils/` contain small focused modules. The sibling `helper/` implements the native protocol, URL validation, format pairing, process control, verification, and persistent helper job state. No HTTP server is started by the application.
 
-No content script or `webRequest` permission is needed for this link-first scope. Future site support should add a provider-specific resolver and tests, then explicitly allow that provider in both the extension and helper. Do not forward arbitrary command-line options or enable every yt-dlp extractor by default.
+The content script can request only panel opening; it cannot issue helper commands. Helper actions accept messages from the exact extension UI path. Future site support should add a provider-specific resolver and tests, then explicitly allow that provider in both the extension and helper. Do not forward arbitrary command-line options or enable every yt-dlp extractor by default.
 
 ## Permissions and data
 
@@ -56,8 +68,10 @@ No content script or `webRequest` permission is needed for this link-first scope
 | `activeTab` | Read the current tab's URL when you invoke UniFetch. |
 | `downloads` | Save, monitor, cancel, and reveal direct media files. |
 | `nativeMessaging` | Communicate with the registered local helper. |
+| `sidePanel` | Open the shared interface alongside the current page. |
+| Specific YouTube host access | Show the page launcher and follow the current YouTube video URL. |
 
-There are **no broad host permissions**, cookie permissions, browsing-history permissions, remote scripts, or externally connectable messaging endpoints. A thumbnail may load from YouTube's image servers for the video you inspected.
+Host access is restricted to HTTPS on `www.youtube.com`, `youtube.com`, `m.youtube.com`, `music.youtube.com`, and `youtu.be`. There is no all-sites access, cookie permission, browsing-history permission, `webRequest` access, remote script, or externally connectable messaging endpoint. The launcher does not inspect or download videos while the interface is closed. A thumbnail may load from YouTube's image servers for the video you inspected.
 
 The helper registration permits this extension's fixed ID only: `dglchdhjnkgalbimblbbpgbmofaicngj`. It is registered under the current user's Chrome, Chrome for Testing, and Chromium native-host keys. `Uninstall helper.cmd` removes those registrations; remove the extension separately in Chrome.
 
@@ -80,7 +94,8 @@ Dependency source URLs and release checksums are saved alongside the binaries in
 - Direct downloads can fail because of server permissions, expired URLs, missing files, or the browser rejecting the download. Chrome decides their final state.
 - Closing Chrome or a helper crash interrupts the native download. Retry by inspecting the video again; automatic resume after a full browser restart is not implemented.
 - Temporary media uses disk space under `helper/state/work`; the finished file is moved to Downloads. Large videos need enough space for separate streams and the merged output. A sudden process termination can leave temporary files for manual removal.
-- If the footer reports setup is needed, run the setup script and press **Check connection** in Settings. Python must remain installed at the registered path.
+- If the footer reports setup is needed, run the setup script and press **Reconnect** in Settings. Python must remain installed at the registered path.
+- If the YouTube page button is missing after updating, reload the extension and refresh the video page. It appears on video pages, not YouTube's home/search pages, and hides in fullscreen.
 - If Windows blocks a dependency, do not disable security controls. Use a trusted permitted build or report the blocked component. This version uses FFmpeg directly for verification because the separate ffprobe executable was blocked on the development PC.
 
 To change the helper destination, create `helper/config.json` containing `{"downloadDirectory":"D:\\YourFolder"}` and restart Chrome. The UI cannot send arbitrary output paths to the helper.

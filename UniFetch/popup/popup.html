@@ -1,42 +1,70 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="color-scheme" content="dark">
-  <title>UniFetch — save a video</title>
+  <meta name="color-scheme" content="light dark">
+  <title>UniFetch — video downloader</title>
   <link rel="icon" href="../assets/logo.svg" type="image/svg+xml">
+  <script src="theme-init.js"></script>
   <link rel="stylesheet" href="popup.css">
 </head>
 <body>
   <div class="app">
     <header class="header">
-      <a class="brand" href="popup.html" aria-label="UniFetch home"><img src="../assets/logo.svg" alt="" width="34" height="34"><span>UniFetch<span class="brand-note">Your offline collection</span></span></a>
-      <button class="icon-button" id="expand" title="Open in a tab" aria-label="Open in a tab"><svg viewBox="0 0 24 24"><path d="M14 4h6v6m0-6-9 9M10 4H5a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-5"/></svg></button>
+      <a class="brand" href="popup.html" aria-label="UniFetch home">
+        <img src="../assets/logo.svg" alt="" width="34" height="34">
+        <span>UniFetch<small>Video downloader</small></span>
+      </a>
+      <div class="header-actions">
+        <button class="icon-button" id="theme-toggle" aria-label="Switch to dark mode" title="Switch to dark mode"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#moon"/></svg></button>
+        <button class="icon-button" id="open-panel" aria-label="Open side panel" title="Open side panel"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#sidebar"/></svg></button>
+      </div>
     </header>
     <nav class="tabs" aria-label="Main navigation">
-      <button class="tab active" data-view="fetch" aria-current="page">Save a video</button>
-      <button class="tab" data-view="history">Downloads <span id="history-count" class="count">0</span></button>
-      <button class="icon-button" id="settings-button" aria-label="Settings" title="Settings"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 17h16M8 4v6m8 4v6"/></svg></button>
+      <button class="tab active" data-view="fetch" aria-current="page"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#video"/></svg>Video</button>
+      <button class="tab" data-view="history"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#history"/></svg>Downloads<span id="history-count" class="count">0</span></button>
+      <button class="tab" id="settings-button" data-view="settings"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#settings"/></svg>Settings</button>
     </nav>
     <main>
       <section id="fetch-view" class="view">
-        <div class="intro"><h1>A link. A little more freedom.</h1><p>Bring a video along for later.</p></div>
-        <form id="link-form" class="link-panel">
-          <div class="label-line"><label for="video-url">Video link</label><span id="provider" class="provider">Auto-detect</span></div>
-          <div class="input-wrap"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 13 4-4m-7 6-1 1a4 4 0 0 1-6-6l4-4a4 4 0 0 1 6 0m4 3 1-1a4 4 0 0 1 6 6l-4 4a4 4 0 0 1-6 0" transform="translate(1 0)"/></svg><input id="video-url" type="url" placeholder="Paste a YouTube or video link" autocomplete="off" spellcheck="false" required aria-describedby="link-hint"><button id="clear-url" class="clear-button" type="button" title="Clear link" aria-label="Clear link">×</button></div>
-          <div class="form-actions"><button class="text-button" type="button" id="current-tab">Use current tab</button><button class="primary" id="inspect" type="submit"><span>Find video</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14m-5-5 5 5-5 5"/></svg></button></div>
+        <div class="intro"><h1>Download a video</h1><p>From your current tab or a link.</p></div>
+        <div id="current-context" class="context" hidden><span class="context-dot"></span><span>Current YouTube video detected</span><svg aria-hidden="true"><use href="../assets/ui-icons.svg#check"/></svg></div>
+        <form id="link-form" class="link-form">
+          <div class="label-line"><label for="video-url">Video link</label><button class="text-button" type="button" id="current-tab"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#refresh"/></svg>Use current tab</button></div>
+          <div class="link-input">
+            <svg class="input-icon" aria-hidden="true"><use href="../assets/ui-icons.svg#link"/></svg>
+            <input id="video-url" type="url" placeholder="Paste a video link" autocomplete="off" spellcheck="false" required aria-label="Video link">
+            <button id="clear-url" class="clear-button" type="button" title="Clear link" aria-label="Clear link"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#x"/></svg></button>
+            <button class="primary inspect-button" id="inspect" type="submit" title="Find video"><span>Find</span><svg aria-hidden="true"><use href="../assets/ui-icons.svg#arrow"/></svg></button>
+          </div>
+          <div class="link-meta"><span id="provider">YouTube & direct video links</span><span id="auto-label">Auto-detect enabled</span></div>
         </form>
-        <p id="link-hint" class="hint">YouTube first. Direct video links, too.</p>
         <div id="status" class="notice" role="status" aria-live="polite" hidden></div>
         <section id="video-result" class="video-result" aria-label="Detected video" hidden></section>
         <section id="active-downloads" aria-label="Active downloads"></section>
-        <section id="welcome" class="welcome"><div class="transfer-icon" aria-hidden="true"><svg viewBox="0 0 48 48"><rect x="8" y="7" width="32" height="24" rx="5"/><path d="m21 14 9 5-9 5zM24 33v9m-5-5 5 5 5-5"/></svg></div><div><h2>Your next watch, ready to go.</h2><p>Choose a format, save it to your PC,<br>and keep it close.</p></div></section>
+        <section id="welcome" class="welcome">
+          <div class="empty-symbol" aria-hidden="true"><svg><use href="../assets/ui-icons.svg#download"/></svg></div>
+          <h2>Your video, ready for offline.</h2>
+          <p>Open UniFetch on a YouTube video.<br>We’ll find the available download options.</p>
+          <span class="empty-note">Or paste a link above to get started.</span>
+        </section>
       </section>
-      <section id="history-view" class="view" hidden><div class="section-heading"><div><h1>Your downloads</h1><p>Saved here, kept on your PC.</p></div><button id="clear-history" class="text-button">Clear list</button></div><div id="history-list"></div></section>
-      <section id="settings-view" class="view" hidden><div class="section-heading"><div><h1>Make it yours</h1><p>A few preferences for your next download.</p></div></div><label class="setting">Preferred quality<select id="quality-setting"><option value="1080">Up to 1080p</option><option value="720">Up to 720p</option><option value="2160">Up to 4K</option><option value="best">Best available</option></select></label><label class="setting check-setting"><span>Ask where to save direct files<small>YouTube files go to Downloads / UniFetch.</small></span><input type="checkbox" id="save-as-setting"></label><div class="helper-info"><h2>Local download helper</h2><p id="helper-detail">Checking connection…</p><button id="reconnect" class="secondary">Check connection</button></div><p class="hint">No account required. No cookies or browsing history are collected. Download only videos you are authorized to save.</p></section>
+      <section id="history-view" class="view" hidden>
+        <div class="section-heading"><div><h1>Downloads</h1><p>Your recent files and activity.</p></div><button id="clear-history" class="text-button">Clear list</button></div>
+        <div id="history-list"></div>
+      </section>
+      <section id="settings-view" class="view" hidden>
+        <div class="section-heading"><div><h1>Preferences</h1><p>Set up your download experience.</p></div></div>
+        <label class="setting"><span>Appearance<small>Shared by the popup and side panel.</small></span><select id="theme-setting"><option value="light">Light</option><option value="dark">Dark</option></select></label>
+        <label class="setting"><span>Preferred quality<small>Choose from the formats available.</small></span><select id="quality-setting"><option value="1080">Up to 1080p</option><option value="720">Up to 720p</option><option value="2160">Up to 4K</option><option value="best">Best available</option></select></label>
+        <label class="setting"><span>Ask where to save direct files<small>YouTube files save to Downloads / UniFetch.</small></span><input type="checkbox" id="save-as-setting"></label>
+        <div class="helper-info"><div class="helper-heading"><h2>Local helper</h2><button id="reconnect" class="text-button"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#refresh"/></svg>Reconnect</button></div><p id="helper-detail">Checking connection…</p></div>
+        <button class="secondary wide" id="expand"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#external"/></svg>Open in a separate tab</button>
+        <p class="privacy-note">No cookies or browsing history collected.<br>Save only videos you are authorized to download.</p>
+      </section>
     </main>
-    <footer><span id="connection" class="connection"><i></i><span>Connecting to your PC…</span></span><span class="version" id="app-version">v1.0.0</span></footer>
+    <footer><button id="connection" class="connection" title="View connection settings"><i></i><span>Connecting to your PC…</span></button><span id="app-version" class="version">v2.0.0</span></footer>
   </div>
   <script type="module" src="popup.js"></script>
 </body>
