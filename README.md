@@ -1,6 +1,6 @@
 # UniFetch
 
-**Version 2.0.0** — a personal video downloader for Chrome on Windows.
+**Version 2.0.1** — a personal video downloader for Chrome on Windows.
 
 Open UniFetch on a YouTube video: it picks up the current link and finds the available formats automatically. Use the small blue button at the bottom-right of the video page to open the side panel, or paste a YouTube or direct video link. A small native helper runs yt-dlp and FFmpeg on your PC.
 
@@ -10,7 +10,7 @@ Open UniFetch on a YouTube video: it picks up the current link and finds the ava
 
 Requirements: Windows x64, Chrome 120 or newer, Python 3.11 or newer available on PATH, and internet access for setup and downloads.
 
-1. Download and extract the [v2.0.0 release](https://github.com/maripilikhith/UnitFetch/releases/tag/v2.0.0), or clone this repository.
+1. Download and extract the [v2.0.1 release](https://github.com/maripilikhith/UnitFetch/releases/tag/v2.0.1), or clone this repository.
 2. Run **Setup UniFetch.cmd**. It installs dependencies inside the project and registers the helper for your Windows user.
 3. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the **UniFetch** subfolder containing `manifest.json`.
 4. Pin UniFetch, open it, and check for **Local helper connected** in the footer.
@@ -18,6 +18,8 @@ Requirements: Windows x64, Chrome 120 or newer, Python 3.11 or newer available o
 Keep the project folder in place after setup. If you move it, run setup again. Administrator privileges are not required. Use **Uninstall helper.cmd** to unregister the helper and remove the extension separately in Chrome.
 
 **Upgrading from v1:** update your source folder, click **Reload** for UniFetch at `chrome://extensions`, then refresh any already-open YouTube pages. V2 adds the side-panel permission and access limited to YouTube hosts for its page button. Existing quality preferences and download history are retained; light is the new default theme. If you extracted into a new folder, run setup there and load that folder's extension.
+
+**Panel says “Unknown action” or the moon button does nothing?** Chrome is likely still running the previous worker alongside newer interface files. Version 2.0.1 fixes the header controls and detects incomplete updates. Close and reopen UniFetch, use **Reload UniFetch** if prompted, then refresh YouTube. You can also reload it from `chrome://extensions`. Let active downloads finish first.
 
 ## Features
 

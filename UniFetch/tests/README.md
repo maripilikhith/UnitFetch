@@ -27,6 +27,8 @@ The browser test starts a temporary loopback server for this generated fixture o
 
 The v2 UI suite (`test:ui`) serves a clearly labeled local HTML fixture at a routed YouTube URL and seeds test-only previews into an isolated extension session. It verifies automatic URL capture/inspection, actual Chrome native-panel opening, SPA navigation, manual-link preservation, theme synchronization, fullscreen hiding, and a 320 px layout. It does **not** prove live extraction or downloading from YouTube. It needs the registered local helper for the connection check. Fixture screenshots remain under ignored `test-results/`; public README screenshots show the actual empty app.
 
+Run `npm run test:upgrade` from a **Git clone containing the `v1.0.0` and `v2.0.0` tags** to test updating an already-loaded unpacked extension. It uses an isolated profile with Developer mode enabled, copies tagged files into a temporary directory, reproduces the old-worker failures, and checks direct preference saving, the reload prompt, and the active-download guard. It then reloads and uses `chrome.action.openPopup()` to create a real toolbar popup; trusted mouse events through its CDP target verify both header buttons. This test uses the installed helper and Chrome for Testing 151 or newer. `REPRO_ONLY=1` stops after reproducing the original fault. It does not touch your regular Chrome profile or download a video.
+
 ## Covered checks
 
 - Manifest parsing, module syntax, permission allowlist, icon files, popup rendering.

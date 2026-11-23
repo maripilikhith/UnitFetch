@@ -7,6 +7,7 @@ import {settings,saveSettings} from '../storage/storage-manager.js';
 import {downloadDirect,syncDirectDownloads} from '../downloader/direct-download.js';
 import {isExtensionUI} from './side-panel.js';
 import {candidateSource} from '../utils/video-context.js';
+import {APP_VERSION} from '../utils/version.js';
 
 let startChain = Promise.resolve();
 let inspectionTask = null;
@@ -62,7 +63,7 @@ export async function handleMessage(message, sender) {
     case 'GET_STATE': {
       await syncDirectDownloads();
       const session = await chrome.storage.session.get(['candidate','inspection','inspectionError']);
-      return {history:await history(),settings:await settings(),...session};
+      return {backgroundVersion:APP_VERSION,history:await history(),settings:await settings(),...session};
     }
     case 'CONNECT': {
       const data = await nativeRequest('ping',{},45000);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.1 — 2026-11-23
+
+- Fix the inert dark-mode button when new popup files are opened while Chrome still runs the v1 background worker. Preferences are now applied immediately and saved directly to extension storage, preserving quality and save-location settings.
+- Open the side panel directly from the popup click, avoiding the old worker's `Unknown action` response and preserving Chrome's required click gesture. The toolbar popup closes after opening the panel.
+- Detect mismatched UI, manifest, and worker versions and offer **Reload UniFetch**. Reloading is disabled while downloads are active. Missing side-panel permission explains the required reload.
+- Add a regression that reproduces the exact v1/v2 mismatch, checks the repair and reload, and exercises both buttons in a real Chrome toolbar popup.
+
 ## 2.0.0 — 2026-11-23
 
 - Automatically capture and inspect the active YouTube video when the extension opens.

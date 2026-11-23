@@ -1,4 +1,4 @@
-# UniFetch 2.0.0
+# UniFetch 2.0.1
 
 A local Chrome extension that picks up the YouTube video you are watching, inspects available formats, and saves a complete video with sound. Pasted YouTube links and direct MP4, WebM, M4V, and MOV links are also supported. No account, cloud downloader, analytics, or external processing service is used.
 
@@ -21,6 +21,8 @@ The GitHub source/release archive intentionally excludes downloaded executables,
 ### Upgrade from v1
 
 Update the files in the existing project folder, reload UniFetch at `chrome://extensions`, and refresh already-open YouTube pages so the page launcher is installed. If Chrome asks to re-enable the extension for its new YouTube/side-panel permissions, enable it. Existing settings and history stay in place. Light is the default theme; use the header's moon icon to switch to dark. If you move the project to a new folder, run setup again and load that folder's extension.
+
+If the interface files have changed but Chrome still has the old manifest or worker loaded, v2.0.1 shows **Reload UniFetch**. Finish any active downloads before reloading, then reopen UniFetch and refresh YouTube. This resolves the mixed-version state that caused **Unknown action** on the panel button and ignored dark-mode changes. Appearance and other UI preferences now save directly to extension storage; the popup opens the panel directly through Chrome's API.
 
 ## Use
 
@@ -96,6 +98,7 @@ Dependency source URLs and release checksums are saved alongside the binaries in
 - Temporary media uses disk space under `helper/state/work`; the finished file is moved to Downloads. Large videos need enough space for separate streams and the merged output. A sudden process termination can leave temporary files for manual removal.
 - If the footer reports setup is needed, run the setup script and press **Reconnect** in Settings. Python must remain installed at the registered path.
 - If the YouTube page button is missing after updating, reload the extension and refresh the video page. It appears on video pages, not YouTube's home/search pages, and hides in fullscreen.
+- If the panel button says **Unknown action**, update to v2.0.1 and reload the extension itself, not just the YouTube page. This message indicates that older background code did not recognize the new action.
 - If Windows blocks a dependency, do not disable security controls. Use a trusted permitted build or report the blocked component. This version uses FFmpeg directly for verification because the separate ffprobe executable was blocked on the development PC.
 
 To change the helper destination, create `helper/config.json` containing `{"downloadDirectory":"D:\\YourFolder"}` and restart Chrome. The UI cannot send arbitrary output paths to the helper.

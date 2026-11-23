@@ -1,10 +1,20 @@
-# UniFetch v2.0.0 verification — 23 November 2026
+# UniFetch v2.0.1 verification — 23 November 2026
+
+## Header-button repair
+
+The upgrade regression reproduced both reported v2.0.0 symptoms by replacing an unpacked extension's UI files while its v1 worker remained loaded: the moon button left the interface light and the panel button returned **Unknown action**. The old settings handler also reset quality/save-location preferences when it received only the new theme field.
+
+With the repair applied, the same running old-worker profile saved dark mode directly, retained quality/save-location preferences, and kept the theme after reopening. The interface detected the incomplete update, explained the missing side-panel capability, and disabled its reload control while a test-only active job was present. Reloading loaded the new worker and manifest and preserved settings.
+
+The test then opened an actual Chrome **POPUP** context using `chrome.action.openPopup()`. Trusted mouse clicks verified that the moon/sun control changes theme and the panel button creates a **SIDE_PANEL** context and closes the toolbar popup. This covers the real popup context missed by the original tab-based checks. The normal direct-download and YouTube navigation UI suites also passed against v2.0.1.
+
+Command: `npm run test:upgrade`. Test profiles and copied old releases stay in ignored `.tools/` directories. No user browser profile was inspected or changed.
 
 ## Version 2 checks passed
 
 - Manifest, synchronized extension/package/helper versions, referenced assets, JavaScript syntax, and the exact YouTube host/permission allowlist.
 - 11 JavaScript tests and 13 Python helper tests, including v1 preference migration, format selection, strict message origins, and native process cancellation.
-- Native messaging handshake reports helper version **2.0.0**.
+- Native messaging handshake reports helper version **2.0.1**.
 - Real Chrome for Testing extension load, native helper connection, direct MP4 saving, missing-file failure, duplicate prevention, cancellation, and history clearing.
 - Light/dark switching, persistence after reload, and synchronization between open surfaces.
 - Opening the extension UI captures and inspects the active YouTube video without a manual paste or Find click.

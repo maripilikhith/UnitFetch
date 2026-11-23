@@ -1,17 +1,22 @@
 import {parseLink} from '../utils/url-utils.js';
 import {youtubeVideoUrl,candidateSource} from '../utils/video-context.js';
 import {node,icon,videoCard,jobRow,isActive} from './render.js';
+import {settings as readSettings,saveSettings} from '../storage/storage-manager.js';
+import {APP_VERSION} from '../utils/version.js';
 
 const $=selector=>document.querySelector(selector);
 const panelMode=new URLSearchParams(location.search).get('surface')==='panel';
 document.body.dataset.surface=panelMode?'panel':'popup';
-$('#app-version').textContent=`v${chrome.runtime.getManifest().version}`;
+$('#app-version').textContent=`v${APP_VERSION}`;
 $('#open-panel').hidden=panelMode;
 $('#open-panel').disabled=true;
 
 let video=null, jobs=[], prefs={quality:'1080',saveAs:true,theme:'light'};
 let busy=false, pollTimer=null, windowId=null, followedTabId=null;
 let followPage=true, contextUrl=null, queuedSource=null, lastAttempt=null;
+let toolbarPopup=false, updateRequired=chrome.runtime.getManifest().version!==APP_VERSION;
+let preferenceWrites=Promise.resolve(), preferenceRevision=0;
+const pendingPreferences=new Map();
 
 async function request(type,data={}) {
   const result=await chrome.runtime.sendMessage({type,...data});
@@ -34,6 +39,14 @@ function showView(name) {
     const selected=tab.dataset.view===name;tab.classList.toggle('active',selected);
     if(selected)tab.setAttribute('aria-current','page');else tab.removeAttribute('aria-current');
   }
+}
+function renderUpdateNotice() {
+  $('#update-notice').hidden=!updateRequired;
+  const downloading=jobs.some(isActive);
+  $('#reload-extension').disabled=downloading;
+  $('#update-detail').textContent=downloading
+    ? 'An update is ready. Let active downloads finish before reloading UniFetch.'
+    : `Finish updating to v${APP_VERSION}: reload UniFetch, then refresh your YouTube pages.`;
 }
 function applyTheme(theme) {
   theme=theme==='dark'?'dark':'light';
@@ -80,16 +93,19 @@ function renderHistory(next) {
   $('#active-downloads').replaceChildren(...active.map(job=>jobRow(job,jobActions)));
   const list=$('#history-list');list.replaceChildren(...jobs.map(job=>jobRow(job,jobActions)));
   if(!jobs.length){const empty=node('div','empty');empty.append(node('strong','','No downloads yet'),node('span','','Your saved videos and download progress will appear here.'));list.append(empty);}
-  $('#clear-history').disabled=!jobs.some(job=>!isActive(job));updateEmpty();
+  $('#clear-history').disabled=!jobs.some(job=>!isActive(job));updateEmpty();renderUpdateNotice();
   clearTimeout(pollTimer);
   if(active.some(job=>job.downloadId!=null))pollTimer=setTimeout(()=>refresh().catch(e=>notice(e.message,'error')),1500);
 }
 function applySettings(settings) {
-  prefs={...prefs,...settings};applyTheme(prefs.theme);
+  const pending=Object.fromEntries([...pendingPreferences].map(([key,entry])=>[key,entry.value]));
+  prefs={...prefs,...settings,...pending};applyTheme(prefs.theme);
   $('#quality-setting').value=prefs.quality;$('#save-as-setting').checked=prefs.saveAs;
 }
 async function refresh() {
-  const state=await request('GET_STATE');applySettings(state.settings);renderHistory(state.history);applyCandidate(state.candidate);return state;
+  const state=await request('GET_STATE');
+  updateRequired=chrome.runtime.getManifest().version!==APP_VERSION || state.backgroundVersion!==APP_VERSION;
+  applySettings(state.settings);renderHistory(state.history);applyCandidate(state.candidate);return state;
 }
 async function connect() {
   $('#connection').className='connection';$('#connection span').textContent='Connecting to your PC…';
@@ -136,8 +152,20 @@ async function captureTab({manual=false}={}) {
   return false;
 }
 async function savePreference(value) {
-  try{applySettings(await request('SAVE_SETTINGS',{settings:value}));}
-  catch(error){notice(error.message,'error');}
+  // UI preferences must work even when Chrome still has the previous worker loaded.
+  const revision=++preferenceRevision;
+  for(const [key,item] of Object.entries(value))pendingPreferences.set(key,{value:item,revision});
+  applySettings(value);
+  const saved=preferenceWrites.catch(()=>{}).then(()=>saveSettings(value));
+  preferenceWrites=saved;
+  try{
+    const settings=await saved;
+    for(const key of Object.keys(value))if(pendingPreferences.get(key)?.revision===revision)pendingPreferences.delete(key);
+    applySettings(settings);
+  }catch(error){
+    for(const key of Object.keys(value))if(pendingPreferences.get(key)?.revision===revision)pendingPreferences.delete(key);
+    notice(`Could not save preferences. ${error.message}`,'error');
+  }
 }
 
 $('#link-form').addEventListener('submit',event=>{event.preventDefault();inspectCurrent();});
@@ -149,7 +177,17 @@ $('#clear-url').addEventListener('click',async()=>{
   try{await request('CLEAR_PREVIEW');}catch(error){notice(error.message,'error');}$('#video-url').focus();
 });
 $('#current-tab').addEventListener('click',()=>captureTab({manual:true}).catch(e=>notice(e.message,'error')));
-$('#open-panel').addEventListener('click',()=>request('OPEN_SIDE_PANEL',{windowId}).catch(e=>notice(e.message,'error')));
+$('#open-panel').addEventListener('click',()=>{
+  const failed=error=>{showView('fetch');notice(error.message,'error');};
+  try{
+    if(typeof chrome.sidePanel?.open!=='function'){
+      updateRequired=true;renderUpdateNotice();
+      throw new Error('Reload UniFetch to enable the side panel, then refresh your YouTube page.');
+    }
+    // Call directly during the click; do not route this gesture through a cached worker.
+    chrome.sidePanel.open({windowId}).then(()=>{if(toolbarPopup)window.close();},failed);
+  }catch(error){failed(error);}
+});
 $('#theme-toggle').addEventListener('click',()=>savePreference({theme:prefs.theme==='dark'?'light':'dark'}));
 $('#theme-setting').addEventListener('change',()=>savePreference({theme:$('#theme-setting').value}));
 $('#quality-setting').addEventListener('change',()=>savePreference({quality:$('#quality-setting').value}));
@@ -160,6 +198,14 @@ for(const tab of document.querySelectorAll('[data-view]'))tab.addEventListener('
 $('#connection').addEventListener('click',()=>showView('settings'));
 $('#reconnect').addEventListener('click',connect);
 $('#clear-history').addEventListener('click',async()=>{try{await request('CLEAR_HISTORY');await refresh();}catch(e){showView('fetch');notice(e.message,'error');}});
+$('#reload-extension').addEventListener('click',async()=>{
+  try{
+    const {history=[]}=await chrome.storage.local.get('history');
+    if(history.some(isActive)){renderHistory(history);return;}
+    await preferenceWrites;
+    chrome.runtime.reload();
+  }catch(error){notice(`Could not reload UniFetch. ${error.message}`,'error');}
+});
 
 chrome.storage.onChanged.addListener((changes,area)=>{
   if(area==='local'&&changes.history)renderHistory(changes.history.newValue||[]);
@@ -176,11 +222,14 @@ chrome.tabs.onActivated.addListener(info=>{
 window.addEventListener('unload',()=>clearTimeout(pollTimer));
 
 async function initialize() {
-  windowId=(await chrome.windows.getCurrent()).id;$('#open-panel').disabled=false;
+  const [window,tab]=await Promise.all([chrome.windows.getCurrent(),chrome.tabs.getCurrent()]);
+  windowId=window.id;toolbarPopup=!tab&&!panelMode;$('#open-panel').disabled=false;
+  applySettings(await readSettings());
   const state=await refresh();
   if(!await captureTab()&&!panelMode&&state.candidate?.expires>Date.now()){
     $('#video-url').value=candidateSource(state.candidate)||'';followPage=false;updateProvider();applyCandidate(state.candidate);
   }
 }
+renderUpdateNotice();
 initialize().catch(e=>notice(e.message,'error'));
 connect();
