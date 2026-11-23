@@ -1,0 +1,35 @@
+{
+  "manifest_version": 3,
+  "name": "UniFetch",
+  "version": "1.0.0",
+  "description": "Paste a video link. Inspect formats and save authorized videos with your local download helper.",
+  "minimum_chrome_version": "120",
+  "permissions": [
+    "storage",
+    "nativeMessaging",
+    "activeTab",
+    "downloads"
+  ],
+  "action": {
+    "default_popup": "popup/popup.html",
+    "default_title": "UniFetch",
+    "default_icon": {
+      "16": "assets/icons/icon16.png",
+      "48": "assets/icons/icon48.png",
+      "128": "assets/icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "assets/icons/icon16.png",
+    "48": "assets/icons/icon48.png",
+    "128": "assets/icons/icon128.png"
+  },
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none';"
+  },
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvMm1a7Oxs0w8G7YmZ16uUeV5OoCMsTTFU/SeS1tRtIURYbykPSLb3Y07aeiJDukqsS0hyzpRhrYwgaEkh/woVKEc+PsqR7eIYjxmCMx3cP0CjIaeXVGRz7JiHB4YUuBnvO3LtHDh80CIWUE6Zjeg9sUyloczsai0k/h2D99BZ40sqdw31R+95tSn4HmFpPN3CKIBjWTP/wN5/YKR79FbnOzo0GroJ/1XQDUSlFp9HBrTRfPL0j7VeacYyNAEzs4NiYbZV8J69BEC0qOXMAW4ZpZsZZHpP/1YpW6IDSKImAegBAbUUttb6Hklk9k3ns9ilMtKOnILFlWHUWn5+qpzeQIDAQAB"
+}
