@@ -1,7 +1,7 @@
 import {parseLink} from '../utils/url-utils.js';
 import {directMetadata} from '../detector/direct-video.js';
 import {streamNotice} from '../downloader/stream-capabilities.js';
-import {nativeRequest} from './native-client.js';
+import {browserRequest} from './browser-client.js';
 import {history,updateHistory,clearHistory,isActive} from '../storage/history-manager.js';
 import {settings,saveSettings} from '../storage/storage-manager.js';
 import {downloadDirect,syncDirectDownloads} from '../downloader/direct-download.js';
@@ -24,13 +24,16 @@ function inspect(input) {
 }
 async function inspectMedia(link) {
   const {candidate} = await chrome.storage.session.get('candidate');
-  if (candidate?.expires > Date.now() && candidateSource(candidate) === link.url) return {...candidate.video,token:candidate.token};
+  if (candidate?.expires > Date.now() && candidateSource(candidate) === link.url) {
+    const valid=link.provider!=='youtube'||(candidate.video.engineToken&&(await browserRequest('has_preview',{token:candidate.video.engineToken})).valid);
+    if(valid)return {...candidate.video,token:candidate.token};
+  }
   await chrome.storage.session.set({inspection:{url:link.url,startedAt:Date.now()}});
   await chrome.storage.session.remove(['candidate','inspectionError']);
   try {
     let video;
-    if (link.provider==='youtube') video = await nativeRequest('inspect',{url:link.url});
-    else video = directMetadata(link) || await nativeRequest('probe',{url:link.url});
+    if (link.provider==='youtube') video = await browserRequest('inspect',{url:link.url});
+    else {video = directMetadata(link); if(!video)throw new Error('Use a direct .mp4, .webm, .m4v, or .mov file link. Other websites are not supported yet.');}
     const token = crypto.randomUUID();
     // Session storage is not exposed to page content scripts; signed URLs expire with the browser session.
     await chrome.storage.session.set({candidate:{token,sourceUrl:link.url,video,expires:Date.now()+15*60*1000}});
@@ -51,12 +54,12 @@ async function download(message) {
   const id = crypto.randomUUID();
   const job = {id,title:video.title,provider:'youtube',hostname:'youtube.com',videoId:video.id,createdAt:Date.now(),status:'queued',progress:null,format:video.formats.find(f=>f.id===message.formatId)?.label};
   await updateHistory(job);
-  try {await nativeRequest('download',{id,token:video.nativeToken,formatId:message.formatId},15000);}
+  try {await browserRequest('download',{id,token:video.engineToken,formatId:message.formatId});}
   catch(error) {await updateHistory({...job,status:'failed',error:error.message});throw error;}
   return job;
 }
 export async function handleMessage(message, sender) {
-  // Native commands must originate from our own UI, never from web pages or content scripts.
+  // Engine commands must originate from our own UI, never from web pages or content scripts.
   if (!isExtensionUI(sender)) throw new Error('This action is only available in UniFetch.');
   if (!message || typeof message.type!=='string') throw new Error('Invalid request.');
   switch(message.type) {
@@ -66,8 +69,9 @@ export async function handleMessage(message, sender) {
       return {backgroundVersion:APP_VERSION,history:await history(),settings:await settings(),...session};
     }
     case 'CONNECT': {
-      const data = await nativeRequest('ping',{},45000);
-      for (const job of data.jobs || []) await updateHistory(job);
+      await startChain;
+      const data = await browserRequest('ping');
+      for (const job of (await history()).filter(j=>j.provider==='youtube' && isActive(j) && j.downloadId==null && !data.activeIds.includes(j.id))) await updateHistory({...job,status:'interrupted',error:'The browser restarted. Find the video again to retry.'});
       return data;
     }
     case 'INSPECT': return inspect(message.url);
@@ -80,20 +84,17 @@ export async function handleMessage(message, sender) {
       const job = (await history()).find(j=>j.id===message.id);
       if (!job || !isActive(job)) throw new Error('This download is no longer active.');
       if (job.downloadId != null) {await chrome.downloads.cancel(job.downloadId); await syncDirectDownloads();}
-      else await nativeRequest('cancel',{id:job.id},15000);
+      else {await browserRequest('cancel',{id:job.id});await updateHistory({...job,status:'cancelled',error:null});}
       return {ok:true};
     }
     case 'SHOW_FILE': {
       const job = (await history()).find(j=>j.id===message.id);
       if (!job || job.status!=='complete') throw new Error('This file is not ready.');
       if (job.downloadId != null) await chrome.downloads.show(job.downloadId);
-      else await nativeRequest('reveal',{id:job.id},10000);
+      else throw new Error('This is a download from an older version. Find it in Downloads / UniFetch.');
       return {ok:true};
     }
     case 'CLEAR_HISTORY': {
-      // Purge helper records too, otherwise reconnect would restore cleared entries.
-      const hasNative = (await history()).some(j=>j.provider==='youtube');
-      if (hasNative) await nativeRequest('clear_history',{},10000);
       await clearHistory(); return {ok:true};
     }
     case 'SAVE_SETTINGS': return saveSettings(message.settings);

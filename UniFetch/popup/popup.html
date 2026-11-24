@@ -51,7 +51,7 @@
           <div class="empty-symbol" aria-hidden="true"><svg><use href="../assets/ui-icons.svg#download"/></svg></div>
           <h2>Your video, ready for offline.</h2>
           <p>Open UniFetch on a YouTube video.<br>We’ll find the available download options.</p>
-          <span class="empty-note">Or paste a link above to get started.</span>
+          <span class="empty-note">No helper needed · up to 256 MB per YouTube download</span>
         </section>
       </section>
       <section id="history-view" class="view" hidden>
@@ -62,13 +62,13 @@
         <div class="section-heading"><div><h1>Preferences</h1><p>Set up your download experience.</p></div></div>
         <label class="setting"><span>Appearance<small>Shared by the popup and side panel.</small></span><select id="theme-setting"><option value="light">Light</option><option value="dark">Dark</option></select></label>
         <label class="setting"><span>Preferred quality<small>Choose from the formats available.</small></span><select id="quality-setting"><option value="1080">Up to 1080p</option><option value="720">Up to 720p</option><option value="2160">Up to 4K</option><option value="best">Best available</option></select></label>
-        <label class="setting"><span>Ask where to save direct files<small>YouTube files save to Downloads / UniFetch.</small></span><input type="checkbox" id="save-as-setting"></label>
-        <div class="helper-info"><div class="helper-heading"><h2>Local helper</h2><button id="reconnect" class="text-button"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#refresh"/></svg>Reconnect</button></div><p id="helper-detail">Checking connection…</p></div>
+        <label class="setting"><span>Ask where to save files<small>Otherwise save to Downloads / UniFetch.</small></span><input type="checkbox" id="save-as-setting"></label>
+        <div class="helper-info"><div class="helper-heading"><h2>Browser engine</h2><button id="reconnect" class="text-button"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#refresh"/></svg>Check status</button></div><p id="helper-detail">No extra software required.</p></div>
         <button class="secondary wide" id="expand"><svg aria-hidden="true"><use href="../assets/ui-icons.svg#external"/></svg>Open in a separate tab</button>
         <p class="privacy-note">No cookies or browsing history collected.<br>Save only videos you are authorized to download.</p>
       </section>
     </main>
-    <footer><button id="connection" class="connection" title="View connection settings"><i></i><span>Connecting to your PC…</span></button><span id="app-version" class="version">v2.0.1</span></footer>
+    <footer><button id="connection" class="connection" title="View connection settings"><i></i><span>Starting browser engine...</span></button><span id="app-version" class="version">v3.0.0</span></footer>
   </div>
   <script type="module" src="popup.js"></script>
 </body>

@@ -4,12 +4,12 @@ const http=require('node:http');
 const assert=require('node:assert/strict');
 const crypto=require('node:crypto');
 const {chromium}=require(process.env.PLAYWRIGHT_MODULE || 'playwright');
-const root=path.resolve('UniFetch');
+const root=path.resolve(process.env.EXTENSION_PATH || 'UniFetch');
 const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json')));
 const id=[...crypto.createHash('sha256').update(Buffer.from(manifest.key,'base64')).digest('hex').slice(0,32)].map(c=>String.fromCharCode(97+parseInt(c,16))).join('');
 (async()=>{
   fs.mkdirSync('test-results',{recursive:true});
-  const fixture=fs.readFileSync('test-results/fixture.mp4');
+  const fixture=fs.readFileSync('UniFetch/tests/fixtures/av.mp4');
   const server=http.createServer((req,res)=>{
     if(req.url==='/missing.mp4'){res.writeHead(404);res.end();return;}
     res.writeHead(200,{'Content-Type':'video/mp4','Content-Length':fixture.length});
@@ -28,7 +28,7 @@ const id=[...crypto.createHash('sha256').update(Buffer.from(manifest.key,'base64
     const worker=context.serviceWorkers()[0] || await context.waitForEvent('serviceworker',{timeout:15000});
     try {await page.locator('#connection.ready').waitFor({timeout:90000});}
     catch(error){console.log('Connection details:',await page.locator('#helper-detail').textContent());await page.screenshot({path:'test-results/connection-error.png',fullPage:true});throw error;}
-    console.log('PASS: extension loaded and native helper connected');
+    console.log('PASS: extension loaded and browser-only engine ready');
     await page.locator('.app').screenshot({path:'test-results/popup.png',animations:'disabled'});
     assert.equal(await page.locator('html').getAttribute('data-theme'),'light');
     await page.locator('#theme-toggle').click();

@@ -1,6 +1,6 @@
 {
   "name": "unifetch-workspace",
-  "version": "2.0.1",
+  "version": "3.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -11,12 +11,20 @@
     "test:upgrade": "node scripts/upgrade-test.cjs",
     "test:youtube": "node scripts/youtube-ui-test.cjs",
     "fixture": "python scripts/generate-fixture.py",
-    "check": "node scripts/validate.mjs"
+    "check": "node scripts/validate.mjs",
+    "build:vendor": "node scripts/build-vendor.mjs",
+    "package": "node scripts/package-extension.mjs",
+    "test:engine": "node scripts/engine-browser-test.cjs"
   },
   "engines": {
     "node": ">=22"
   },
   "devDependencies": {
-    "playwright": "1.62.1"
+    "esbuild": "0.28.2",
+    "fflate": "0.8.3",
+    "googlevideo": "5.0.1",
+    "mediabunny": "1.66.2",
+    "playwright": "1.62.1",
+    "youtubei.js": "18.3.0"
   }
 }

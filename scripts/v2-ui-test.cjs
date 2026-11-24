@@ -14,7 +14,7 @@ const urlFor=videoId=>`https://www.youtube.com/watch?v=${videoId}`;
 function candidate(videoId) {
   return {token:`test-${videoId}`,sourceUrl:urlFor(videoId),expires:Date.now()+600000,video:{
     id:videoId,provider:'youtube',hostname:'youtube.com',title:`UI test fixture · ${videoId}`,
-    author:'Local automated test',duration:125,nativeToken:'test-only',
+    author:'Local automated test',duration:125,engineToken:'test-only',
     formats:['mp4','webm'].flatMap(ext=>[2160,1440,1080,720,480,360,240,144].map(height=>({
       id:`${height}-${ext}`,ext,height,filesize:height*18000,label:`${height}p · ${ext.toUpperCase()} · video + audio`
     })))
@@ -35,6 +35,11 @@ function candidate(videoId) {
       '<!doctype html><html><head><title>Local YouTube navigation fixture</title></head><body style="font:18px Segoe UI;padding:40px;background:#f5f8fc"><h1>Local UI test fixture</h1><p>This page simulates YouTube navigation. No video is fetched.</p></body></html>'
     }));
     const worker=context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
+    // Seeded UI previews have no real media cache; accept only that test token.
+    await worker.evaluate(()=>{
+      const send=chrome.runtime.sendMessage.bind(chrome.runtime);
+      chrome.runtime.sendMessage=(message,...args)=>message?.target==='engine'&&message.action==='has_preview'&&message.payload?.token==='test-only'?Promise.resolve({ok:true,data:{valid:true}}):send(message,...args);
+    });
     const control=await context.newPage();await control.goto(`${origin}/popup/popup.html?test=control`);
     await control.locator('#connection.ready').waitFor({timeout:90000});
     const youtube=await context.newPage();await youtube.goto(urlFor(first));await youtube.bringToFront();

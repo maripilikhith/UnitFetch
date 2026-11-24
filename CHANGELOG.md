@@ -1,3 +1,13 @@
+# Version 3.0.0 - Chrome-only edition
+
+- ZIP -> extract -> Load unpacked. No native helper or setup required.
+- Bundled browser extraction, SABR transport and lossless MP4/WebM merging.
+- Preserved automatic YouTube detection, page launcher, side panel and light/dark UI.
+- Chrome download saving, background progress, cancellation, and truncated-stream checks.
+- 256 MiB input cap, 10-minute processing timeout, and explicit verification-required errors.
+- Updated install guide, bundled license/source notices, end-user ZIP packaging and browser CI.
+- YouTube remains experimental: the live sample required verification before completion; deterministic browser pipeline tests passed.
+
 # Changelog
 
 ## 2.0.1 — 2026-11-23

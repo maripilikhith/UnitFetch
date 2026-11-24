@@ -10,9 +10,9 @@ permissions:
   contents: read
 
 jobs:
-  source-and-helper:
+  chrome-extension:
     runs-on: windows-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
@@ -21,9 +21,23 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.13'
+      - name: Install development dependencies
+        run: npm ci --ignore-scripts
+      - name: Rebuild browser bundle
+        run: npm run build:vendor
+      - name: Verify bundled engine matches source
+        run: git diff --exit-code -- UniFetch/vendor
       - name: Validate manifest, versions, permissions, and module syntax
         run: npm run check
       - name: Test URL detection and filenames
         run: npm test
-      - name: Test native protocol, metadata, and cancellation
-        run: npm run test:helper
+      - name: Package Chrome extension
+        run: npm run package
+      - name: Install isolated test browser
+        run: npx playwright install chromium --no-shell
+      - name: Test Chrome downloads and themes
+        run: npm run test:browser
+      - name: Test Chrome-only merging, cancellation, and failures
+        run: npm run test:engine
+      - name: Test page detection and side panel
+        run: npm run test:ui

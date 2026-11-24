@@ -1,49 +1,42 @@
-# UniFetch v2.0.1 verification — 23 November 2026
+# UniFetch v3.0.0 verification - 24 November 2026
 
-## Header-button repair
+## Browser-only runtime
 
-The upgrade regression reproduced both reported v2.0.0 symptoms by replacing an unpacked extension's UI files while its v1 worker remained loaded: the moon button left the interface light and the panel button returned **Unknown action**. The old settings handler also reset quality/save-location preferences when it received only the new theme field.
+V3 removes nativeMessaging and native-client.js. It bundles YouTube.js, GoogleVideo, and Mediabunny; Chrome's offscreen document handles transport and lossless audio/video merging. No helper or executable is included in the user ZIP.
 
-With the repair applied, the same running old-worker profile saved dark mode directly, retained quality/save-location preferences, and kept the theme after reopening. The interface detected the incomplete update, explained the missing side-panel capability, and disabled its reload control while a test-only active job was present. Reloading loaded the new worker and manifest and preserved settings.
+The extension was loaded in clean, isolated Chrome for Testing 151 profiles on Windows. Chrome 120 is the manifest minimum; it was not separately tested.
 
-The test then opened an actual Chrome **POPUP** context using `chrome.action.openPopup()`. Trusted mouse clicks verified that the moon/sun control changes theme and the panel button creates a **SIDE_PANEL** context and closes the toolbar popup. This covers the real popup context missed by the original tab-based checks. The normal direct-download and YouTube navigation UI suites also passed against v2.0.1.
+## Passed checks
 
-Command: `npm run test:upgrade`. Test profiles and copied old releases stay in ignored `.tools/` directories. No user browser profile was inspected or changed.
+- Manifest/version consistency, permission allowlist, sandbox restrictions, referenced assets, and JavaScript syntax.
+- 15 unit tests: URL parsing, trusted message origins, settings migration, filenames, format choice, media host restrictions, compatible/stereo pairing, size limits, MP4/WebM remuxing and cancellation.
+- Actual Chrome direct-file save, missing-file failure, duplicate prevention, cancellation, persisted preferences/history and history clearing.
+- Real offscreen MP4 and WebM merging followed by Chrome downloads completion.
+- Network failure and truncated media result in failed history entries and no saved partial file.
+- Cancellation is not overwritten by late processing events.
+- A download finishes after its popup page closes.
+- Direct calls from the UI to privileged engine commands are rejected.
+- Automatic current-video capture, format switching, bottom-right launcher, real Chrome side panel, 320px layout, light/dark theme synchronization, SPA navigation, fullscreen hiding, and manually pasted link preservation.
+- Dependency audit after updating esbuild/fflate: zero reported vulnerabilities.
+- The exact 0.85 MB release ZIP was extracted and loaded in a fresh Chrome profile; startup, direct saving, cancellation, history and themes passed without any build or setup step.
 
-## Version 2 checks passed
+The deterministic engine integration test copies the extension into an isolated test folder and substitutes only YouTube extraction/network input with original generated video/tone fixtures. The production offscreen document, messaging, muxer, download APIs and history run unchanged. This proves the browser pipeline, not live YouTube availability. The fixture adapter is never included in the release ZIP.
 
-- Manifest, synchronized extension/package/helper versions, referenced assets, JavaScript syntax, and the exact YouTube host/permission allowlist.
-- 11 JavaScript tests and 13 Python helper tests, including v1 preference migration, format selection, strict message origins, and native process cancellation.
-- Native messaging handshake reports helper version **2.0.1**.
-- Real Chrome for Testing extension load, native helper connection, direct MP4 saving, missing-file failure, duplicate prevention, cancellation, and history clearing.
-- Light/dark switching, persistence after reload, and synchronization between open surfaces.
-- Opening the extension UI captures and inspects the active YouTube video without a manual paste or Find click.
-- A trusted click on the bottom-right page button creates an actual Chrome **SIDE_PANEL** context. The popup's panel shortcut also works.
-- Side-panel video navigation following, preservation of manually pasted links, and clearing the followed preview on a non-video page.
-- Launcher hiding on non-video pages and during fullscreen playback.
-- Separate file-type/quality controls preserve resolution when switching containers; the 320 px panel has no horizontal overflow.
-- No uncaught page errors in either browser suite. Screenshots of the light/dark empty app and fixture-populated views were visually reviewed.
+## Live YouTube result - limited
 
-The new YouTube UI checks use a clearly labeled local navigation fixture and seeded session previews in an isolated test profile. They exercise the production interface and real Chrome side-panel API, but **do not establish live YouTube extraction or download success**. Test fixture previews are not shipped in the extension. README screenshots show the actual empty interface with the connected helper.
+The public Big Buck Bunny sample (aqz-KE-bpKQ) returned metadata and MP4/WebM options. The initial Chrome API request returned HTTP 403; scoping required protocol headers to the extension's own requests resolved that issue.
 
-Commands: `npm run check`, `npm test`, `npm run test:helper`, `python scripts/native-protocol-test.py`, `npm run test:browser`, and `npm run test:ui`.
+The subsequent live SABR download received approximately 3.7 MB of media, then YouTube required stream-protection verification. It failed without saving a partial file. V3 reports this as an unsupported verification-required download and stops promptly. A complete live YouTube download was **not** established by this test. No cookies, login, proof-token generation, or verification bypass were used.
 
-## Earlier v1 live-engine results
+Sample attribution: (c) 2008 Blender Foundation / www.bigbuckbunny.org, Creative Commons Attribution 3.0. Project: https://peach.blender.org/about/
 
-- Real YouTube metadata extraction for the official Big Buck Bunny film: 16 format choices returned.
-- Real YouTube helper download of the 144p WebM choice; separate media streams were downloaded and merged, and FFmpeg decoded both required tracks to verify the final file. Output: 15,549,298 bytes. The sample is in `test-results/youtube`.
-- Setup idempotency and isolated browser regression passed for v1 before publication.
+## Reproduce
 
-## Limitation observed
+npm run check
+npm test
+npm run test:browser
+npm run test:engine
+npm run test:ui
+npm run package
 
-A later live YouTube UI attempt returned YouTube's sign-in/bot-check response. It did not produce a preview or download. The UI reports this state, and the helper now translates that response into a readable explanation. Full live YouTube downloading through the popup was therefore not verified to completion. No browser cookies were imported, and the check was not bypassed.
-
-Version 2 changes the interface and page integration, retaining the same downloader dependencies and these service limitations. The engine has completed a live sample, while YouTube's current response can still prevent a particular request. This does not establish compatibility with every YouTube video or network.
-
-## Environment notes
-
-Python 3.13, yt-dlp 2026.10.26, yt-dlp-ejs 0.8.0, Deno 2.9.8, FFmpeg build N-128970, and isolated Chrome for Testing 151. The installed Chrome is 157. Test browser profiles are separate from the user's regular browser profile.
-
-The standalone yt-dlp executable had unreliable startup latency, so the final implementation uses its project-local official Python package. Windows blocked the separate ffprobe binary; it was removed. FFmpeg performs verification instead. Normal Windows process permissions were required for the controlled cancellation test; the restricted shell sandbox prevented `taskkill` in its initial run.
-
-Sample attribution: (c) 2008 Blender Foundation / www.bigbuckbunny.org, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/), [project license](https://peach.blender.org/about/).
+See README for npm installation and isolated test-browser setup. Earlier native-helper verification belongs to v2 release tags and is not evidence for v3.

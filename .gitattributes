@@ -9,3 +9,7 @@
 *.cmd text eol=crlf
 *.bat text eol=crlf
 *.png binary
+*.mp4 binary
+*.webm binary
+# Generated bundle includes upstream template-string whitespace.
+UniFetch/vendor/engine.js whitespace=-trailing-space

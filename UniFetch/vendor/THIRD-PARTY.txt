@@ -1,0 +1,20 @@
+youtubei.js 18.3.0 — MIT
+git+https://github.com/LuanRT/YouTube.js.git
+
+googlevideo 5.0.1 — MIT
+git+https://github.com/LuanRT/GoogleVideo.git
+
+mediabunny 1.66.2 — MPL-2.0
+git+https://github.com/Vanilagy/mediabunny.git
+
+@bufbuild/protobuf 2.17.0 — (Apache-2.0 AND BSD-3-Clause)
+https://github.com/bufbuild/protobuf-es.git
+
+fflate 0.8.3 — MIT
+https://101arrowz.github.io/fflate
+
+meriyah 7.4.3 — ISC
+git+https://github.com/meriyah/meriyah.git
+
+Mediabunny source is included unmodified under sources/mediabunny (MPL-2.0).
+Rebuild from the repository with npm ci and npm run build:vendor.

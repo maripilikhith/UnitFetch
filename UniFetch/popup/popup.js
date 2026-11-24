@@ -108,11 +108,11 @@ async function refresh() {
   applySettings(state.settings);renderHistory(state.history);applyCandidate(state.candidate);return state;
 }
 async function connect() {
-  $('#connection').className='connection';$('#connection span').textContent='Connecting to your PC…';
-  try{
-    const data=await request('CONNECT');$('#connection').className='connection ready';$('#connection span').textContent='Local helper connected';
-    $('#helper-detail').textContent=`Helper ${data.version} · yt-dlp ${data.tools.ytDlp}. Files save to ${data.downloadDirectory}.`;
-  }catch(error){$('#connection').className='connection error';$('#connection span').textContent='Local helper needs setup';$('#helper-detail').textContent=error.message;}
+  $('#connection').className='connection';$('#connection span').textContent='Starting browser engine...';
+  try {
+    await request('CONNECT');$('#connection').className='connection ready';$('#connection span').textContent='Ready - runs in Chrome';
+    $('#helper-detail').textContent='Everything runs in Chrome. Video + audio downloads are limited to 256 MB. Some YouTube videos require verification and cannot be downloaded.';
+  }catch(error){$('#connection').className='connection error';$('#connection span').textContent='Browser engine unavailable';$('#helper-detail').textContent=error.message;}
 }
 async function inspectCurrent({automatic=false}={}) {
   let source;

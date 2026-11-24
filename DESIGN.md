@@ -1,9 +1,13 @@
-# UniFetch v2 interface
+# UniFetch browser architecture
 
-The main task is saving the video currently open on YouTube. Opening the toolbar popup or page launcher captures the current video and inspects formats. Manual links remain available. Use the current-page workflow documented by [9xbuddy](https://docs.123sudo.com/9xbuddy/getting-started/install) as a reference; preserve UniFetch's own identity and assets.
+The toolbar popup and Chrome side panel share the same UI and persisted theme. A small isolated content script on YouTube sends only a validated panel-open action. It cannot start downloads or invoke the engine.
 
-Light palette: canvas `#f5f8fc`, surface `#ffffff`, ink `#17243c`, blue `#2563eb`, muted `#62738d`, line `#e2e9f3`. Dark palette retains ink `#0c1220`, panel `#151e30`, blue `#79a8ff`, violet `#b2a1ff`, text `#f3f6ff`, muted `#9caac3`. Use local Segoe UI Variable / Segoe UI. Headings 18–20 px, body 13 px, utility 11–12 px. Left alignment throughout.
+The service worker validates exact extension UI senders, serializes starts, stores public previews and history, and delegates anonymous YouTube work to a Chrome offscreen document. Chrome downloads owns final file saving. Completion is recorded only after Chrome reports success.
 
-Layout: 400 px popup and responsive native side panel, using the same UI. Compact brand header with theme and panel controls, three navigation tabs, current-page context and link field, then the actual video result. A small blue launcher sits at the bottom-right of YouTube video pages and hides in full screen. Chrome controls which side its native panel occupies (right by default).
+The offscreen document bundles YouTube.js for metadata/player processing, GoogleVideo for SABR transport, and Mediabunny for lossless MP4/WebM merging. Temporary media and signed URLs remain in memory. Combined input is capped at 256 MiB; one YouTube task runs at a time. Both tracks and approximate duration are checked before saving. Cancel/restart/failure states cannot be replaced by late successful events.
 
-Review against the screenshot: remove the large marketing headline, oversized select menu, and unnecessary vertical space. Separate file type from quality: MP4/WebM radio controls and a compact quality grid expose the available choices directly. A single blue download action anchors the result. No fabricated thumbnails, format choices, or stats. Use semantic controls, visible keyboard focus, reduced-motion support, and readable loading/error states.
+Player transforms execute in an opaque sandbox iframe with no extension APIs and connect-src none. The privileged extension pages have no unsafe-eval permission. Network requests are limited to declared YouTube/API/Googlevideo hosts and omit credentials. Protocol-header rules are limited to the extension initiator, never browsing tabs. Verification-required and protected media are unsupported.
+
+Runtime dependencies are checked into UniFetch/vendor so GitHub source ZIPs are already loadable. scripts/build-vendor.mjs rebuilds the bundle and includes third-party licenses plus unmodified MPL source. scripts/package-extension.mjs creates the smaller end-user ZIP and excludes tests and all legacy helper files.
+
+The helper folder is retained solely as legacy v2 source. It is never invoked by v3. Older implementation notes are available in the v2 Git tags.

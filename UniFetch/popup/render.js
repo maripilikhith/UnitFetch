@@ -88,7 +88,7 @@ export function jobRow(job,{cancel,reveal,retry}) {
     const progress=node('progress');progress.max=100;progress.setAttribute('aria-label',`${job.title} download progress`);
     if(Number.isFinite(job.progress))progress.value=job.progress;
     row.append(progress);
-    const parts=[Number.isFinite(job.progress)?`${Math.round(job.progress)}% of current stream`:null,bytes(job.bytes),job.speed?`${bytes(job.speed)}/s`:null].filter(Boolean);
+    const parts=[Number.isFinite(job.progress)?`${Math.round(job.progress)}% downloaded`:null,bytes(job.bytes),job.speed?`${bytes(job.speed)}/s`:null].filter(Boolean);
     row.append(node('div','download-info',parts.join(' · ')||'Preparing the file…'));
   } else row.append(node('p','hint',`${job.hostname||''} · ${dateLabel(job.createdAt)}`));
   if(job.error)row.append(node('p','download-error',job.error));

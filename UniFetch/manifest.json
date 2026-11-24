@@ -1,15 +1,16 @@
 {
   "manifest_version": 3,
   "name": "UniFetch",
-  "version": "2.0.1",
-  "description": "Automatically detect your YouTube video, choose a format, and download with a local helper.",
+  "version": "3.0.0",
+  "description": "Detect YouTube videos and download supported video + audio entirely in Chrome. No helper installation.",
   "minimum_chrome_version": "120",
   "permissions": [
     "storage",
-    "nativeMessaging",
     "activeTab",
     "downloads",
-    "sidePanel"
+    "sidePanel",
+    "offscreen",
+    "declarativeNetRequestWithHostAccess"
   ],
   "action": {
     "default_popup": "popup/popup.html",
@@ -30,7 +31,8 @@
     "type": "module"
   },
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none';"
+    "extension_pages": "script-src 'self'; object-src 'none'; base-uri 'none';",
+    "sandbox": "sandbox allow-scripts; script-src 'self' 'unsafe-eval'; connect-src 'none'; img-src 'none'; media-src 'none'; object-src 'none'; frame-src 'none'; form-action 'none'; base-uri 'none';"
   },
   "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvMm1a7Oxs0w8G7YmZ16uUeV5OoCMsTTFU/SeS1tRtIURYbykPSLb3Y07aeiJDukqsS0hyzpRhrYwgaEkh/woVKEc+PsqR7eIYjxmCMx3cP0CjIaeXVGRz7JiHB4YUuBnvO3LtHDh80CIWUE6Zjeg9sUyloczsai0k/h2D99BZ40sqdw31R+95tSn4HmFpPN3CKIBjWTP/wN5/YKR79FbnOzo0GroJ/1XQDUSlFp9HBrTRfPL0j7VeacYyNAEzs4NiYbZV8J69BEC0qOXMAW4ZpZsZZHpP/1YpW6IDSKImAegBAbUUttb6Hklk9k3ns9ilMtKOnILFlWHUWn5+qpzeQIDAQAB",
   "host_permissions": [
@@ -38,7 +40,9 @@
     "https://youtube.com/*",
     "https://m.youtube.com/*",
     "https://music.youtube.com/*",
-    "https://youtu.be/*"
+    "https://youtu.be/*",
+    "https://*.googlevideo.com/*",
+    "https://youtubei.googleapis.com/*"
   ],
   "side_panel": {
     "default_path": "popup/popup.html?surface=panel"
@@ -57,5 +61,10 @@
       ],
       "run_at": "document_idle"
     }
-  ]
+  ],
+  "sandbox": {
+    "pages": [
+      "engine/sandbox.html"
+    ]
+  }
 }

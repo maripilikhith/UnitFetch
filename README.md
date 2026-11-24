@@ -1,81 +1,81 @@
-# UniFetch
+# UniFetch 3 - Chrome edition
 
-**Version 2.0.1** — a personal video downloader for Chrome on Windows.
+Download the ZIP, extract it, and load the **UniFetch** folder in Chrome. **No helper, Python, FFmpeg, Node.js, setup script, or server is needed.**
 
-Open UniFetch on a YouTube video: it picks up the current link and finds the available formats automatically. Use the small blue button at the bottom-right of the video page to open the side panel, or paste a YouTube or direct video link. A small native helper runs yt-dlp and FFmpeg on your PC.
+[Download UniFetch-v3.0.0-Chrome.zip](https://github.com/maripilikhith/UnitFetch/releases/download/v3.0.0/UniFetch-v3.0.0-Chrome.zip) | [Releases](https://github.com/maripilikhith/UnitFetch/releases)
 
-<img src="docs/images/unifetch-popup.png" alt="UniFetch v2 in white and light blue, with its link field and connected local helper" width="360"> <img src="docs/images/unifetch-dark.png" alt="UniFetch v2 in dark mode" width="360">
+<img src="docs/images/unifetch-popup.png" alt="UniFetch Chrome edition in light mode" width="360"> <img src="docs/images/unifetch-dark.png" alt="UniFetch Chrome edition in dark mode" width="360">
 
-## Install
+## Install in Chrome
 
-Requirements: Windows x64, Chrome 120 or newer, Python 3.11 or newer available on PATH, and internet access for setup and downloads.
+1. Download the ZIP above and **extract** it to a permanent folder.
+2. Open `chrome://extensions` and enable **Developer mode**.
+3. Click **Load unpacked** and select the extracted **UniFetch** folder containing `manifest.json`.
 
-1. Download and extract the [v2.0.1 release](https://github.com/maripilikhith/UnitFetch/releases/tag/v2.0.1), or clone this repository.
-2. Run **Setup UniFetch.cmd**. It installs dependencies inside the project and registers the helper for your Windows user.
-3. Open `chrome://extensions`, enable **Developer mode**, choose **Load unpacked**, and select the **UniFetch** subfolder containing `manifest.json`.
-4. Pin UniFetch, open it, and check for **Local helper connected** in the footer.
+Pin UniFetch from Chrome's extensions menu. Open a YouTube video and click UniFetch: it picks up the link automatically. Choose a format and click **Download video**. The small bottom-right button on YouTube opens Chrome's side panel.
 
-Keep the project folder in place after setup. If you move it, run setup again. Administrator privileges are not required. Use **Uninstall helper.cmd** to unregister the helper and remove the extension separately in Chrome.
+Chrome loads an extracted folder, not the ZIP itself. Keep that folder in place. If using GitHub's **Code > Download ZIP**, select the **UniFetch** subfolder inside the extracted repository. All runtime libraries are already included.
 
-**Upgrading from v1:** update your source folder, click **Reload** for UniFetch at `chrome://extensions`, then refresh any already-open YouTube pages. V2 adds the side-panel permission and access limited to YouTube hosts for its page button. Existing quality preferences and download history are retained; light is the new default theme. If you extracted into a new folder, run setup there and load that folder's extension.
+Requirements: desktop Chrome 120 or newer and an internet connection. There is no account or helper setup. Managed browsers may disable Developer mode.
 
-**Panel says “Unknown action” or the moon button does nothing?** Chrome is likely still running the previous worker alongside newer interface files. Version 2.0.1 fixes the header controls and detects incomplete updates. Close and reopen UniFetch, use **Reload UniFetch** if prompted, then refresh YouTube. You can also reload it from `chrome://extensions`. Let active downloads finish first.
+## What works
 
-## Features
+- Automatic current YouTube video detection; pasted watch, short, Shorts, and embed links.
+- Chrome side panel, bottom-right page launcher, and automatic navigation tracking.
+- White/light-blue and navy dark themes shared across the popup and panel.
+- MP4/WebM quality selection with compatible video and audio paired together.
+- Anonymous YouTube extraction, supported media transport, and lossless merging inside Chrome.
+- Direct MP4, WebM, M4V, and MOV file downloads through Chrome's download manager.
+- Progress, cancellation, recent history, preferred quality, save-location choice, and file shortcuts.
 
-- Automatic current-video capture when opening the toolbar popup or side panel.
-- A small bottom-right launcher on YouTube video pages, hidden during fullscreen playback.
-- A native side panel that follows YouTube navigation and preserves manually pasted links.
-- White/light-blue and navy dark themes, saved across the popup and side panel.
-- Separate MP4/WebM choices and a compact quality grid with video-and-audio pairing.
-- YouTube link recognition, including watch, short, Shorts, and embed URLs.
-- Local downloading, FFmpeg merging, and output verification.
-- Direct MP4, WebM, M4V, and MOV downloads using Chrome's download manager.
-- Progress, cancellation, duplicate prevention, recent history, and file-location shortcuts.
-- Expanded-tab view, preferred-quality settings, and readable errors.
+One YouTube download runs at a time. You may close the popup while downloading, but keep Chrome running. Files normally save to **Downloads / UniFetch**, or Chrome asks where to save when that preference is enabled.
 
-YouTube files save to **Downloads / UniFetch**. One YouTube download runs at a time. Closing the popup leaves it running; closing Chrome interrupts it.
+## YouTube support is experimental and limited
 
-Opening the interface inspects the video; **Download video** still starts the download. Chrome normally places its native side panel on the right, but follows your browser's side-panel position preference.
+**Loading the extension does not guarantee every YouTube video can be downloaded.** YouTube can require verification before playback or partway through a download. UniFetch stops and reports an error; it does not import cookies, bypass sign-in or verification, or save partial streams as successful downloads.
 
-## Current limits
+The live sample test detected formats and received media, but YouTube required verification before completion. Complete browser merging and saving were verified with original test media. See [test results](TEST-RESULTS.md) for the distinction.
 
-This is an experimental personal-use release. YouTube can require a sign-in or bot check, and some requests will fail. The helper completed a real sample download during testing; a later full-UI attempt encountered YouTube's bot check. [Verification details](TEST-RESULTS.md) distinguish these results.
+- YouTube downloads have a **256 MiB combined input limit** and a **10-minute processing limit**. Oversized known formats are omitted. Unknown-size streams stop at the limit. Browser memory use is higher than the file size during merging.
+- Live, upcoming, private, paid, DRM-protected, and verification-required videos are unsupported.
+- Playlists, arbitrary website extraction, and standalone HLS/DASH links are unsupported.
+- Some codecs may not play in every external player even when their container is supported.
+- Save only videos you are authorized to download.
 
-Playlists, ongoing live streams, private/paid/DRM videos, arbitrary website extraction, and standalone HLS/DASH downloads are not supported. UniFetch does not import browser cookies, bypass authentication, or circumvent DRM. Use it only for media you are authorized to save.
+## Updating from v1/v2
 
-## Source layout
+Finish active downloads, replace the extension folder, then click **Reload** at `chrome://extensions` and refresh YouTube. If moving to a different folder, choose **Load unpacked** for the new **UniFetch** folder. Review the requested permissions. The extension ID is unchanged; stored settings/history are retained when Chrome retains the installation.
 
-| Path | Purpose |
-| --- | --- |
-| `UniFetch/` | Manifest V3 extension, popup/side panel, YouTube launcher, downloads, and storage. |
-| `helper/` | Python native host, validation, extraction, process control, and setup. |
-| `scripts/` | Validation, asset generation, and integration checks. |
-| `UniFetch/tests/`, `helper/tests/` | JavaScript and Python tests. |
-| `.github/workflows/validate.yml` | Windows source and helper CI. |
+V3 never connects to the old native helper. The helper source and **Uninstall helper.cmd** remain only for existing v2 users; they are excluded from the Chrome release ZIP. Older helper downloads may need to be located manually in Downloads / UniFetch. Older releases remain available on GitHub.
 
-Downloaded dependencies, browser profiles, machine-specific registration files, and personal history are excluded from Git and the release ZIP. Setup downloads the official tools on the target PC. Dependency licensing and provenance are described in the [full guide](UniFetch/README.md#dependencies).
+## Privacy and permissions
+
+Video links and download history stay in local Chrome storage. No analytics or external downloader service is used. YouTube/Googlevideo receive anonymous media requests. Temporary signed media data stays in the hidden engine document, not persistent history.
+
+- `storage`: preferences and download history.
+- `activeTab` and YouTube host access: capture the current video and display the page launcher.
+- `downloads`: save, cancel, and reveal downloaded files.
+- `sidePanel`: Chrome's side panel.
+- `offscreen`: continue downloading and merge tracks after the popup closes.
+- `declarativeNetRequestWithHostAccess`: set protocol headers for **UniFetch's own** YouTube media requests. Browsing-tab requests are not modified.
+- Googlevideo/API host access: fetch supported media directly.
+
+The YouTube player transform runs in an isolated sandbox with no extension APIs or network access. Libraries and their licenses are bundled in `UniFetch/vendor`; the included Mediabunny source is unmodified and licensed under MPL-2.0.
 
 ## Development
 
-Node.js 22 or newer is needed for development checks, not for running the extension.
+Node.js 22+ is only needed to develop or rebuild the project:
 
 ```powershell
+npm ci --ignore-scripts
+npm run build:vendor
 npm run check
 npm test
-npm run test:helper
-```
-
-For optional browser integration checks, install the helper first, then:
-
-```powershell
-npm ci
+npm run package
 npx playwright install chromium --no-shell
-npm run fixture
 npm run test:browser
+npm run test:engine
 npm run test:ui
 ```
 
-The browser suites use separate test profiles, generated media, and clearly labeled local navigation fixtures. The v2 suite checks the real native panel, automatic capture, navigation, responsive layout, and themes. Live YouTube checks are opt-in and depend on the service's response. See [testing instructions](UniFetch/tests/README.md).
-
-[Full installation and usage guide](UniFetch/README.md) · [Changelog](CHANGELOG.md) · [UI design notes](DESIGN.md)
+`TEST_BROWSER` can point to a Chrome for Testing executable. Browser tests use isolated profiles under `.tools/`; generated downloads go under `test-results/`. Test fixtures never ship in the user ZIP. `helper/` is legacy v2 code and is not part of the v3 runtime.
